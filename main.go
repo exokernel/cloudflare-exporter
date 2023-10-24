@@ -12,6 +12,8 @@ import (
 	"github.com/nelkinda/health-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+
+	_ "net/http/pprof"
 )
 
 var (
@@ -162,6 +164,11 @@ func main() {
 		log.Fatal(err)
 	}
 	mustRegisterMetrics(deniedMetricsSet)
+
+	go func() {
+		// listen on 6060 and print a message if the listener returns
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	go func() {
 		for ; true; <-time.NewTicker(60 * time.Second).C {
