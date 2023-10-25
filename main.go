@@ -102,7 +102,7 @@ func filterExcludedZones(all []cloudflare.Zone, exclude []string) []cloudflare.Z
 	return filtered
 }
 
-func fetchMetrics() {
+func fetchMetrics(deniedMetricsSet MetricsSet) {
 	var wg sync.WaitGroup
 	zones := fetchZones()
 	accounts := fetchAccounts()
@@ -123,9 +123,9 @@ func fetchMetrics() {
 		targetZones := filteredZones[:sliceLength]
 		filteredZones = filteredZones[len(targetZones):]
 
-		go fetchZoneAnalytics(targetZones, &wg)
-		go fetchZoneColocationAnalytics(targetZones, &wg)
-		go fetchLoadBalancerAnalytics(targetZones, &wg)
+		go fetchZoneAnalytics(targetZones, &wg, deniedMetricsSet)
+		go fetchZoneColocationAnalytics(targetZones, &wg, deniedMetricsSet)
+		go fetchLoadBalancerAnalytics(targetZones, &wg, deniedMetricsSet)
 	}
 
 	wg.Wait()
@@ -172,7 +172,7 @@ func main() {
 
 	go func() {
 		for ; true; <-time.NewTicker(60 * time.Second).C {
-			go fetchMetrics()
+			go fetchMetrics(deniedMetricsSet)
 		}
 	}()
 
